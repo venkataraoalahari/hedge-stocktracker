@@ -43,6 +43,7 @@ public class Flink_Connector {
         }
         return  hm;
     }
+
     public ResultSet getDataFromCassandra() {
         this.resultSet = session.execute(this.query);
         return this.resultSet;
@@ -72,23 +73,20 @@ public class Flink_Connector {
         this.cluster.close();
     }
 
-    public static void main(String[] args) {
-
-        Timestamp timestamp1 = new Timestamp(new Date().getTime());
-        String sql = "select * from test.HistStocks ;";
-        //val obj = new Flink_Connector(sql)val HistoricData = obj.getHashMap
-       Flink_Connector c =new Flink_Connector(sql);
-        Timestamp timestamp2 = new Timestamp(new Date().getTime());
-       HashMap<String,Double> hm = c.getHashMap();
-
-        // get time difference in seconds
-        long milliseconds = timestamp2.getTime() - timestamp1.getTime();
-        System.out.println(milliseconds);
-        int seconds = (int) milliseconds / 1000;
-        System.out.println("time taken by process is " + seconds);
-
-
-
-    }
+//    public static void main(String[] args) {
+//
+//        Timestamp timestamp1 = new Timestamp(new Date().getTime());
+//        String sql = "select * from test.HistStocks ;";
+//        //val obj = new Flink_Connector(sql)val HistoricData = obj.getHashMap
+//       Flink_Connector c =new Flink_Connector(sql);
+//        Timestamp timestamp2 = new Timestamp(new Date().getTime());
+//       HashMap<String,Double> hm = c.getHashMap();
+//
+//        // get time difference in seconds
+//        long milliseconds = timestamp2.getTime() - timestamp1.getTime();
+//        System.out.println(milliseconds);
+//        int seconds = (int) milliseconds / 1000;
+//        System.out.println("time taken by process is " + seconds);
+//    }
 }
 
