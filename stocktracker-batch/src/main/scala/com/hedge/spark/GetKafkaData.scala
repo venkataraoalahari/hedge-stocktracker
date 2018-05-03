@@ -35,7 +35,7 @@ object GetKafkaData {
     val sc = spark.sparkContext
   //  val sparkConf = new SparkConf().setAppName("GetKafkaData")
   //   val ssc = new StreamingContext(sparkConf, Seconds(1))
-    val ssc = new StreamingContext(sc, Seconds(10))
+    val ssc = new StreamingContext(sc, Seconds(60))
     
     val kafkaParams = Map(
       "bootstrap.servers" -> "sandbox.kylo.io:6667",
@@ -58,10 +58,12 @@ object GetKafkaData {
           
           spark.sql("set hive.exec.dynamic.partition=true")
           spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
-          println("Hive Insertion Starts!!")
+
+          logger.info("Hive Insertion Starts!!")
           spark.sql("insert into table hedge.stock_tracker partition(symbol) select timestampValue,price,volume,symbol from stock")
        //   spark.sql("insert into table hedge.stock_tracker select symbol,timestampValue,price,volume from stock")
-          println("Hive Insertion Ends!!")
+       
+          logger.info("Hive Insertion Ends!!")
         }
     }
     
