@@ -3,6 +3,7 @@ package DataGeneratorPckg;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
@@ -42,6 +43,11 @@ class RunTask extends TimerTask {
 	public final String propFilePath = "app.properties";
 	public final String stockPropFilePath = "FILE_PATH";
 	public final String kafkaTopic = "TOPIC";
+	public final String csvFilePath = "CSV_FILE_PATH";
+	public final String acks = "ACKS";
+	public final String retries = "RETRIES";
+	public final String lingerMs = "LINGER_MS";
+	public final String bootstrapServer = "BOOTSTRAP_SERVERS";
 	ProducerRecord<String, String> producerRecord;
 	DecimalFormat twodeci = new DecimalFormat("0.00");
 	int wrongDataPos = 0;
@@ -51,6 +57,7 @@ class RunTask extends TimerTask {
 	double oldPriceBeforeWrongData = 0;
 	int oldVolumeBeforeWrongData = 0;
 	int flagTimeRange = 0;
+	FileWriter writer;
 
 	Properties kafkaProp = new Properties();
 	Producer<String, String> producer;
@@ -153,13 +160,13 @@ class RunTask extends TimerTask {
 	}
 
 	public void initializeKafka() {
-		kafkaProp.setProperty("bootstrap.servers", getProp("BOOTSTRAP_SERVERS"));
+		kafkaProp.setProperty("bootstrap.servers", getProp(bootstrapServer));
 		kafkaProp.setProperty("key.serializer", StringSerializer.class.getName());
 		kafkaProp.setProperty("value.serializer", StringSerializer.class.getName());
 		// producer acks
-		kafkaProp.setProperty("acks", getProp("ACKS"));
-		kafkaProp.setProperty("retries", getProp("RETRIES"));
-		kafkaProp.setProperty("linger.ms", getProp("LINGER_MS"));
+		kafkaProp.setProperty("acks", getProp(acks));
+		kafkaProp.setProperty("retries", getProp(retries));
+		kafkaProp.setProperty("linger.ms", getProp(lingerMs));
 
 		producer = new org.apache.kafka.clients.producer.KafkaProducer<String, String>(kafkaProp);
 
@@ -226,14 +233,10 @@ class RunTask extends TimerTask {
 							.parseInt(output.get(key).split(",")[3].split(":")[1].replace("}", "").trim());
 					newStockPrice = oldPriceBeforeWrongData + (oldPriceBeforeWrongData * randomVal);
 					newStockVolume = oldVolumeBeforeWrongData + randomVolume;
-					// System.out.println("Old Stock price is = " +
-					// oldPriceBeforeWrongData);
-					// System.out.println("Old Stock volume is = " +
-					// oldVolumeBeforeWrongData);
-					// System.out.println("New Stock price is = " +
-					// newStockPrice);
-					// System.out.println("New Stock volume is = " +
-					// newStockVolume);
+					// System.out.println("Old Stock price is = " + oldPriceBeforeWrongData);
+					// System.out.println("Old Stock volume is = " + oldVolumeBeforeWrongData);
+					// System.out.println("New Stock price is = " + newStockPrice);
+					// System.out.println("New Stock volume is = " + newStockVolume);
 					setWrongDataPos();
 				} else if (wrongDataFlag == 1 && oldkeyforWrongData.equals(key)) {
 					System.out.println("Generating correct data after wrong data is generated.");
@@ -242,14 +245,10 @@ class RunTask extends TimerTask {
 					newStockPrice = oldStockPrice + (oldStockPrice * randomVal);
 					newStockVolume = oldStockVolume + randomVolume;
 					oldkeyforWrongData = "";
-					// System.out.println("Old Stock price is = " +
-					// oldStockPrice);
-					// System.out.println("Old Stock volume is = " +
-					// oldStockVolume);
-					// System.out.println("New Stock price is = " +
-					// newStockPrice);
-					// System.out.println("New Stock volume is = " +
-					// newStockVolume);
+					// System.out.println("Old Stock price is = " + oldStockPrice);
+					// System.out.println("Old Stock volume is = " + oldStockVolume);
+					// System.out.println("New Stock price is = " + newStockPrice);
+					// System.out.println("New Stock volume is = " + newStockVolume);
 
 				} else {
 					// System.out.println("Generating correct data.");
@@ -258,14 +257,10 @@ class RunTask extends TimerTask {
 							.parseInt(output.get(key).split(",")[3].split(":")[1].replace("}", "").trim());
 					newStockPrice = oldStockPrice + (oldStockPrice * randomVal);
 					newStockVolume = oldStockVolume + randomVolume;
-					// System.out.println("Old Stock price is = " +
-					// oldStockPrice);
-					// System.out.println("Old Stock volume is = " +
-					// oldStockVolume);
-					// System.out.println("New Stock price is = " +
-					// newStockPrice);
-					// System.out.println("New Stock volume is = " +
-					// newStockVolume);
+					// System.out.println("Old Stock price is = " + oldStockPrice);
+					// System.out.println("Old Stock volume is = " + oldStockVolume);
+					// System.out.println("New Stock price is = " + newStockPrice);
+					// System.out.println("New Stock volume is = " + newStockVolume);
 				}
 			} else {
 				// System.out.println("Executing generateData() first time...");
@@ -327,24 +322,77 @@ class RunTask extends TimerTask {
 
 		System.out.println("Code will generate wrong data on position = " + wrongDataPos);
 	}
+	
+	public void writeToCsv(){
+		System.out.println("Writing stock details to csv file...");
+		StringBuilder sb = new StringBuilder();
+		Iterator<String> it = output.keySet().iterator();
+		while (it.hasNext()) {
+			String key = (String) it.next();
+			String value = output.get(key);
+			sb.append(value.split(",")[0].split(":")[1].trim())
+			  .append(",")
+			  .append(value.split(",")[1].replaceFirst(":", "%%").split("%%")[1].trim())
+			  .append(",")
+			  .append(value.split(",")[2].split(":")[1].trim())
+			  .append(",")
+			  .append(value.split(",")[3].split(":")[1].replace("}", "").trim())
+			  .append('\n');
+			
+			System.out.println(sb);
+			
+			try {
+				writer.append(sb);
+				writer.flush();
+				sb.delete(0, sb.length());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
+		}
+		System.out.println("csv file is appended.");
+	}
+
+	public void intializeCsvDetails(){
+		try{
+			writer = new FileWriter(getProp(csvFilePath),true);
+			StringBuilder sb = new StringBuilder();
+			if(new File(getProp(csvFilePath)).length() == 0){
+				sb.append("Symbol")
+				  .append(",")
+				  .append("Timestamp")
+				  .append(",")
+				  .append("price")
+				  .append(",")
+				  .append("volume")
+				  .append('\n');
+				writer.append(sb);
+				sb.delete(0, sb.length());
+			}
+			//if( !writer.exists() || (writer.length() == 0))
+		}catch(Exception e){
+			System.out.println(e);
+		}
+	}
+	
 	public void run() {
 
 		// System.out.println("********** Inside Run **********");
 
 		if (firstExecution == 0) {
 			// System.out.println("First time executing code...");
-			// System.out.println("Initialzing values...");
+			// System.out.println("Initializing values...");
 			// System.out.println("Loading properties...");
 			loadProp();
-			// System.out.println("Initialzing stock symbols...");
+			// System.out.println("Initializing stock symbols...");
 			getStocks();
-			// System.out.println("Initialzing kafka producer...");
+			// System.out.println("Initializing kafka producer...");
 			initializeKafka();
+			// System.out.println("Initializing Output file parameters...");
+			intializeCsvDetails();
 			df.setRoundingMode(RoundingMode.CEILING);	
 			firstExecution = 1;
 		}
-			
 			Date currTime = new Date(StockTimestamp.getTime());
 			System.out.println("******************");
 			System.out.println(currTime);
@@ -355,6 +403,12 @@ class RunTask extends TimerTask {
 			if(currTime.compareTo(currStrtDate) == 1 && currTime.compareTo(currEndDate) ==1 ){
 				System.out.println("Current TIme is outside given time range.");
 				updateProp();
+				try {
+					writer.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				System.exit(-1);
 			}
 			else{
@@ -362,6 +416,7 @@ class RunTask extends TimerTask {
 				System.out.println("calling generateData....");
 				generateData();
 				putKafka();
+				writeToCsv();
 				cal.setTimeInMillis(StockTimestamp.getTime());
 				cal.add(Calendar.SECOND, 1);
 				StockTimestamp = new Timestamp(cal.getTime().getTime());
