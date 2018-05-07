@@ -142,7 +142,7 @@ class RunTask extends TimerTask {
 	}
 
 	public void getStocks() {
-		StockList = getProp(propStockDetails).split(",");
+		StockList = stockProp.getProperty(propStockDetails).split(",");
 	}
 
 	public void putKafka() {
@@ -415,7 +415,7 @@ class RunTask extends TimerTask {
 				System.out.println("Current Time is inbetween given time range.");
 				System.out.println("calling generateData....");
 				generateData();
-				putKafka();
+				//putKafka();
 				writeToCsv();
 				cal.setTimeInMillis(StockTimestamp.getTime());
 				cal.add(Calendar.SECOND, 1);
