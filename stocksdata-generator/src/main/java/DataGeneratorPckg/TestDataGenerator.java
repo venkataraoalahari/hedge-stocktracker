@@ -415,7 +415,7 @@ class RunTask extends TimerTask {
 				System.out.println("Current Time is inbetween given time range.");
 				System.out.println("calling generateData....");
 				generateData();
-				//putKafka();
+				putKafka();
 				writeToCsv();
 				cal.setTimeInMillis(StockTimestamp.getTime());
 				cal.add(Calendar.SECOND, 1);
