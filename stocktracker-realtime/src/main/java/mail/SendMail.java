@@ -1,4 +1,4 @@
-package com.teradata.mail;
+package mail;
 
 import javax.mail.*;
 import javax.mail.internet.*;
@@ -18,9 +18,9 @@ public class SendMail {
      * @param subject subject of the mail
      * @param text body of the mail
      */
-    /*String bodymsg ;
+    /*String path ;
     SendMail(String body){
-        this.bodymsg=body;
+        this.path=body;
     }*/
     public  void send(final Properties props,String bodymsg){
 
@@ -58,11 +58,11 @@ public class SendMail {
             e.printStackTrace();
         }
     }
-    public Properties loadPropertiesFile(){
+    public Properties loadPropertiesFile(String path){
 
         final Properties props = new Properties();
         try {
-            props.load(new FileInputStream("C:\\Users\\DL250031\\IdeaProjects\\Flink\\src\\Resources\\mail.properties"));
+            props.load(new FileInputStream(path));
         } catch (FileNotFoundException e1) {
             System.err.println("Properties file not found");
             e1.printStackTrace();

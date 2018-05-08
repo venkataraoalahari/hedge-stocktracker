@@ -1,10 +1,11 @@
-package com.teradata.flinkConnection;
+package flinkConnection;
 
 import com.datastax.driver.core.Cluster;
         import com.datastax.driver.core.Session;
 //import org.apache.flink.streaming.connectors.cassandra.ClusterBuilder;
         import com.datastax.driver.core.ResultSet;
   import com.datastax.driver.core.Row;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.util.TypeKey;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -25,6 +26,7 @@ public class Flink_Connector {
         hm = new HashMap<String, Double>();
         this.query = sql;
         this.cluster = Cluster.builder().addContactPoint("127.0.0.1").build();
+        //this.cluster = Cluster.builder().addContactPoint("192.168.232.138").build();
         this.session = cluster.connect();
         System.out.println("Connected Cassandra !!");
     }
@@ -33,15 +35,26 @@ public class Flink_Connector {
         ResultSet r = getDataFromCassandra();
         //HashMap<String, Integer> hm = new HashMap<String, Integer>();
         for (Row row : r) {
-            String sock_symbol = row.getString("stock_symbol");
-            String timestamp = row.getString("timestamp");
-            Double histRatio = Double.parseDouble(row.getString("histRatio"));
+            String sock_symbol = row.getString("symbol").replace('"', ' ').trim();
+            String timestamp = row.getString("timestampvalue");
+            Double histRatio = row.getDouble("histratio");
+            //Double histRatio = row.getDouble("volumechange");
             //System.out.println(empId+" -->"+ empName +" "+empSal);
 
             hm.put(sock_symbol + "_" + timestamp, histRatio);
 
         }
         return  hm;
+    }
+    public  Double getValue(){
+        ResultSet r = getDataFromCassandra();
+        Double histRatio= 99999.0;
+        for (Row row : r) {
+             histRatio = row.getDouble("histratio");
+            //System.out.println(empId+" -->"+ empName +" "+empSal);
+
+        }
+        return histRatio;
     }
 
     public ResultSet getDataFromCassandra() {
@@ -73,20 +86,31 @@ public class Flink_Connector {
         this.cluster.close();
     }
 
-//    public static void main(String[] args) {
-//
-//        Timestamp timestamp1 = new Timestamp(new Date().getTime());
-//        String sql = "select * from test.HistStocks ;";
-//        //val obj = new Flink_Connector(sql)val HistoricData = obj.getHashMap
-//       Flink_Connector c =new Flink_Connector(sql);
-//        Timestamp timestamp2 = new Timestamp(new Date().getTime());
-//       HashMap<String,Double> hm = c.getHashMap();
-//
-//        // get time difference in seconds
-//        long milliseconds = timestamp2.getTime() - timestamp1.getTime();
-//        System.out.println(milliseconds);
-//        int seconds = (int) milliseconds / 1000;
-//        System.out.println("time taken by process is " + seconds);
-//    }
+    public static void main(String[] args) {
+
+        Timestamp timestamp1 = new Timestamp(new Date().getTime());
+        String sql = "select * from hedge.stock ;";
+        //val obj = new Flink_Connector(sql)val HistoricData = obj.getHashMap
+       Flink_Connector c =new Flink_Connector(sql);
+        Timestamp timestamp2 = new Timestamp(new Date().getTime());
+       HashMap<String,Double> hm = c.getHashMap();
+
+        for (String name: hm.keySet()){
+
+            String key =name.toString();
+            String value = hm.get(name).toString();
+            System.out.println(key + " " + value);
+
+
+        }
+        // get time difference in seconds
+        long milliseconds = timestamp2.getTime() - timestamp1.getTime();
+        System.out.println(milliseconds);
+        int seconds = (int) milliseconds / 1000;
+        System.out.println("time taken by process is " + seconds);
+
+
+
+    }
 }
 

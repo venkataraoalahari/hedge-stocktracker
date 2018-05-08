@@ -1,4 +1,4 @@
-package com.teradata.flinkConnection;
+package flinkConnection;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -7,7 +7,8 @@ import org.apache.flink.batch.connectors.cassandra.CassandraInputFormat;
 import org.apache.flink.streaming.connectors.cassandra.ClusterBuilder;
 import org.apache.flink.api.java.tuple.Tuple2;
 import java.io.IOException;
-import com.datastax.driver.core.Row;
+import java.sql.Timestamp;
+import java.util.Date;
 
 /*com.datastax.driver.core --The main package for the DataStax Java driver for Cassandra.*/
 public class Flink_Cassandra {
@@ -29,7 +30,8 @@ public class Flink_Cassandra {
 
     public static void main(String[] args)throws IOException {
 
-        String sql = "select * from test.emp1 ;";
+        Timestamp timestamp1 = new Timestamp(new Date().getTime());
+        String sql = "select * from test.HistStocks ;";
 
         /*Flink_Cassandra obj = new Flink_Cassandra(sql);
         ResultSet r = obj.getDataFromCassandra();
@@ -52,8 +54,13 @@ public class Flink_Cassandra {
 
         Tuple2<String, String> testOutputTuple = new Tuple2<String, String>();
         cassandraInputFormat.nextRecord(testOutputTuple);
+        Timestamp timestamp2 = new Timestamp(new Date().getTime());
 
         System.out.println("column1: " + testOutputTuple.f0);
         System.out.println("column2: " + testOutputTuple.f1);
+        long milliseconds = timestamp2.getTime() - timestamp1.getTime();
+        System.out.println(milliseconds);
+        int seconds = (int) milliseconds / 1000;
+        System.out.println("time taken by process is " + seconds);
     }
 }
