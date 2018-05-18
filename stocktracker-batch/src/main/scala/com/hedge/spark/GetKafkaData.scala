@@ -10,6 +10,7 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.sql.SparkSession
 import net.liftweb.json._
+import java.util.Calendar
 
 object GetKafkaData {
   val logger = LoggerFactory.getLogger(getClass)
@@ -55,15 +56,16 @@ object GetKafkaData {
           val dfStock = rdd.map(line => parseJson(line)).toDF()
    //       dfStock.show()
           dfStock.createOrReplaceTempView("stock")
-          
           spark.sql("set hive.exec.dynamic.partition=true")
           spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
-
-          logger.info("Hive Insertion Starts!!")
+          
+          val startTime = Calendar.getInstance
+          logger.info("Hive Insertion Starts at time =========> " +startTime.get(Calendar.HOUR)+":"+startTime.get(Calendar.MINUTE)+":"+startTime.get(Calendar.SECOND))
           spark.sql("insert into table hedge.stock_tracker partition(symbol) select timestampValue,price,volume,symbol from stock")
        //   spark.sql("insert into table hedge.stock_tracker select symbol,timestampValue,price,volume from stock")
        
-          logger.info("Hive Insertion Ends!!")
+          val endTime = Calendar.getInstance
+          logger.info("Hive Insertion Ends at time   =========> " +endTime.get(Calendar.HOUR)+":"+endTime.get(Calendar.MINUTE)+":"+endTime.get(Calendar.SECOND))
         }
     }
     
