@@ -1,4 +1,4 @@
-package StockDataAnalysis;
+
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -351,7 +351,7 @@ class UploadStreamDataTask extends TimerTask {
 		// convertToJson();
 		// displayJsonArray();
 		getData();
-		//getAlertData();
+	//	getAlertData();
 		pushDataToBI();
 	}
 }

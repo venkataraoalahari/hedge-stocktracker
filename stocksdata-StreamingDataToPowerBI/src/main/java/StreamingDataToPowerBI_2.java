@@ -1,4 +1,4 @@
-package StockDataAnalysis;
+
 import org.json.JSONArray;
 
 import java.io.OutputStream;
@@ -25,7 +25,7 @@ class UploadStreamDataTask_2 extends TimerTask {
 	/*String[] colList = {"symbol", "tmst", "dateValue", "timeValue", "currentratio", "histratio", "ratiodeviation",
 			"threshold", "alertFlag", "price", "volume", "priceavg", "pricechange", "volumeavg", "volumechange"};*/
 	/*String[] colList = {"symbol", "count"};*/
-	String[] colList = {"HDFC", "ONGC", "RELIANCE", "SBI", "TCS"};
+	String[] colList = {"HDFC", "ONGC", "RELIANCE", "SBI", "TCS", "TOTAL"};
 	String finalOutput;
 
 	public UploadStreamDataTask_2(String[] args) {
@@ -105,8 +105,9 @@ class UploadStreamDataTask_2 extends TimerTask {
 				"  max(case when symbol = 'ONGC' then alerts end) ONGC,\n" +
 				"  max(case when symbol = 'RELIANCE' then alerts end) RELIANCE,\n" +
 				"  max(case when symbol = 'SBI' then alerts end) SBI,\n" +
-				"  max(case when symbol = 'TCS' then alerts end) TCS\n" +
-				"from (select symbol, count(*) as alerts from stock_alert group by symbol order by symbol) a;";
+				"  max(case when symbol = 'TCS' then alerts end) TCS,\n" +
+				"  max(case when symbol = 'TOTAL' then alerts end) TOTAL\n" +
+				"from (select symbol, NVL(count(*),0) as alerts from stock_alert group by symbol UNION ALL SELECT 'TOTAL' as symbol, NVL(COUNT(symbol),0) as alerts FROM stock_alert) a;";
 
 		System.out.println("Final Query is = " + finalQuery);
 		try {
@@ -119,59 +120,6 @@ class UploadStreamDataTask_2 extends TimerTask {
 
 	}
 
-
-
-	/*
-	 * public void convertToJson() { json = new JSONArray(); Timestamp currentTime;
-	 * int recordCnt = 0; try { ResultSetMetaData rsmd = rs.getMetaData(); while
-	 * (rs.next()) { recordCnt++; int numColumns = rsmd.getColumnCount(); JSONObject
-	 * obj = new JSONObject();
-	 * 
-	 * System.out.println("Inside while loop in convert to json method.");
-	 * currentTime = Timestamp.valueOf(rs.getString("tmst"));
-	 * System.out.println("Current Time = " + currentTime); if (lastTimeStmt ==
-	 * null) System.out.println("Last time is not yet set."); else
-	 * System.out.println("Last Time = " + lastTimeStmt);
-	 * 
-	 * if( (lastTimeStmt == null) || (currentTime.after(lastTimeStmt)) )
-	 * lastTimeStmt = currentTime;
-	 * 
-	 * System.out.println("After comparing. last time  = " + lastTimeStmt); for (int
-	 * i = 1; i < numColumns + 1; i++) {
-	 * 
-	 * String column_name = rsmd.getColumnName(i); int column_type =
-	 * rsmd.getColumnType(i);
-	 * 
-	 * if ((column_type == java.sql.Types.BIGINT) || (column_type ==
-	 * java.sql.Types.INTEGER) || (column_type == java.sql.Types.TINYINT) ||
-	 * (column_type == java.sql.Types.SMALLINT)) { obj.put(column_name,
-	 * rs.getInt(column_name)); } else if (column_type == java.sql.Types.BOOLEAN) {
-	 * obj.put(column_name, rs.getBoolean(column_name)); } else if (column_type ==
-	 * java.sql.Types.BLOB) { obj.put(column_name, rs.getBlob(column_name)); } else
-	 * if ((column_type == java.sql.Types.DOUBLE) || (column_type ==
-	 * java.sql.Types.DECIMAL)) { obj.put(column_name, rs.getDouble(column_name)); }
-	 * else if ((column_type == java.sql.Types.FLOAT) || (column_type ==
-	 * java.sql.Types.REAL)) { obj.put(column_name, rs.getFloat(column_name)); }
-	 * else if (column_type == java.sql.Types.NVARCHAR) { obj.put(column_name,
-	 * rs.getNString(column_name)); } else if ((column_type ==
-	 * java.sql.Types.VARCHAR) || (column_type == java.sql.Types.CHAR)) {
-	 * obj.put(column_name, rs.getString(column_name)); } else if (column_type ==
-	 * java.sql.Types.DATE) { obj.put(column_name, rs.getDate(column_name)); } else
-	 * if (column_type == java.sql.Types.TIMESTAMP) { obj.put(column_name,
-	 * Timestamp.valueOf(rs.getString(column_name))); } else if (column_type ==
-	 * java.sql.Types.TIME) { obj.put(column_name, rs.getTimestamp(column_name)); }
-	 * else if (column_type == java.sql.Types.BINARY) { obj.put(column_name,
-	 * rs.getBytes(column_name)); } else { obj.put(column_name,
-	 * rs.getObject(column_name)); } } System.out.println("Json Object is " + obj);
-	 * json.put(obj); } System.out.println("Total records processed = " +
-	 * recordCnt); } catch (Exception e) {
-	 * System.out.println("Exception in convert to Json method.");
-	 * e.printStackTrace(); System.exit(-1); } }
-	 * 
-	 * public void displayJsonArray() {
-	 * System.out.println("**************************"); System.out.println(json);
-	 * System.out.println("**************************"); }
-	 */
 	public void getData() {
 		Timestamp currentTime;
 		recordCnt = 0;
@@ -249,7 +197,7 @@ class UploadStreamDataTask_2 extends TimerTask {
 				System.out.println("After comparing. last time  = " + lastTimeStmt);*/
 
 				for (int i = 0; i < colList.length; i++) {
-					if ((colList[i] == "HDFC") || (colList[i] == "ONGC") || (colList[i] == "RELIANCE") || (colList[i] == "SBI") || (colList[i] == "TCS") )
+					if ((colList[i] == "HDFC") || (colList[i] == "ONGC") || (colList[i] == "RELIANCE") || (colList[i] == "SBI") || (colList[i] == "TCS")  || (colList[i] == "TOTAL") )
 						br.append("\"").append(colList[i]).append("\" : ").append("\"").append(rs.getString(colList[i]))
 								.append("\",");
 					else
@@ -358,6 +306,6 @@ public class StreamingDataToPowerBI_2 {
 	public static void main(String[] args) {
 		UploadStreamDataTask_2 task = new UploadStreamDataTask_2(args);
 		Timer timer = new Timer();
-		timer.schedule(task, 5000, 5000);
+		timer.schedule(task, 1000, 1000);
 	}
 }

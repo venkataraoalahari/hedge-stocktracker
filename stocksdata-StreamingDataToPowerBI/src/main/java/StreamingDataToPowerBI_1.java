@@ -1,4 +1,4 @@
-package StockDataAnalysis;
+
 import org.json.JSONArray;
 
 import java.io.OutputStream;
