@@ -12,6 +12,7 @@
         <module>stocktracker-batch</module>
         <module>stocktracker-realtime</module>
         <module>stocksdata-generator</module>
+        <module>stocksdata-StreamingDataToPowerBI</module>
     </modules>
 
 </project>

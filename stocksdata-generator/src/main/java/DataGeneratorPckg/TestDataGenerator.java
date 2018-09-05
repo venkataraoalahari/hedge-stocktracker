@@ -138,7 +138,7 @@ class RunTask extends TimerTask {
 	}
 
 	public String getProp(String key) {
-		return p.getProperty(key);
+		return stockProp.getProperty(key);
 	}
 
 	public void getStocks() {
@@ -324,7 +324,7 @@ class RunTask extends TimerTask {
 	}
 	
 	public void writeToCsv(){
-		System.out.println("Writing stock details to csv file...");
+		//System.out.println("Writing stock details to csv file...");
 		StringBuilder sb = new StringBuilder();
 		Iterator<String> it = output.keySet().iterator();
 		while (it.hasNext()) {
@@ -339,7 +339,7 @@ class RunTask extends TimerTask {
 			  .append(value.split(",")[3].split(":")[1].replace("}", "").trim())
 			  .append('\n');
 			
-			System.out.println(sb);
+			//System.out.println(sb);
 			
 			try {
 				writer.append(sb);
@@ -355,7 +355,7 @@ class RunTask extends TimerTask {
 
 	public void intializeCsvDetails(){
 		try{
-			writer = new FileWriter(getProp(csvFilePath),true);
+			writer = new FileWriter(p.getProperty(csvFilePath),true);
 			StringBuilder sb = new StringBuilder();
 			if(new File(getProp(csvFilePath)).length() == 0){
 				sb.append("Symbol")
@@ -401,7 +401,7 @@ class RunTask extends TimerTask {
 			System.out.println("******************");
 			// Date currTime = tmstmpVal.parse(StockTimestamp);
 			if(currTime.compareTo(currStrtDate) == 1 && currTime.compareTo(currEndDate) ==1 ){
-				System.out.println("Current TIme is outside given time range.");
+				System.out.println("Current Time is outside given time range.");
 				updateProp();
 				try {
 					writer.close();
@@ -416,7 +416,7 @@ class RunTask extends TimerTask {
 				System.out.println("calling generateData....");
 				generateData();
 				putKafka();
-				writeToCsv();
+				//writeToCsv();
 				cal.setTimeInMillis(StockTimestamp.getTime());
 				cal.add(Calendar.SECOND, 1);
 				StockTimestamp = new Timestamp(cal.getTime().getTime());
@@ -442,11 +442,15 @@ public class TestDataGenerator {
 
 	public static void main(String[] args) {
 		//System.out.println("Inside main method of public class.");
+		for(int i = 0 ; i < args.length ; i++) {
+			System.out.println(args[i]);
+		}
 		if (!(args.length == 3 || args.length == 1 || args.length == 0)){
 			System.out.println("Program called with wrong no. of arguments. Expected parameters are 3 or 1 or 0");
 			System.out.println("Call program with Time frame and wrong data flag. eg.  \"2018-04-20 09:00:00\" \"2018-04-20 09:01:00\" 1");
 			System.out.println("Call program with only wrong data flag. eg. 1");
 			System.out.println("or Call program without any prameters.");
+			System.exit(-1);
 		}
 		TimerTask task = new RunTask(args);
 		Timer timer = new Timer();

@@ -13,15 +13,20 @@ object SparkTransformationIgnite {
     val configFile = args(1)
     
     val actualWindow = windowLength - 1
-    val warehouseLocation = "hedge-spark-warehouse";
+    val warehouseLocation = "hdfs://localhost:9000/hedge-spark-warehouse";
     val spark = SparkSession.builder().appName("Hedge-Spark Transformation").master("local[2]")
-      .config("spark.sql.warehouse.dir", warehouseLocation).enableHiveSupport().getOrCreate();
+      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .config("spark.hadoop.fs.defaultFS","hdfs://localhost:9000")
+      .config("fs.defaultFS","hdfs://localhost:9000")
+      .enableHiveSupport().getOrCreate();
 
+    
     spark.sql("set hive.exec.dynamic.partition=true")
     spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
 
-    val ratioQuery = "INSERT INTO TABLE hedge.stock_transformation_temp partition(symbol) " +
-      "SELECT t1.timestampValue,t1.avgprice,t1.pricechange,t1.avgvolume,t1.volumechange,NVL(t1.pricechange/t1.volumechange,0) as ratio,t1.symbol FROM " +
+    //val ratioQuery = "INSERT INTO TABLE hedge.stock_transformation_temp partition(symbol) " +
+    val ratioQuery = "INSERT INTO TABLE hedge.stock_transformation_temp " +
+      "SELECT t1.symbol,t1.timestampValue,t1.avgprice,t1.pricechange,t1.avgvolume,t1.volumechange,NVL(t1.pricechange/t1.volumechange,0) as ratio FROM " +
       "(SELECT t.symbol,t.timestampValue,t.price,t.volume,t.avgprice,t.avgvolume,((t.price-t.avgprice)*100/t.avgprice) as pricechange, ((t.volume-t.avgvolume)*100/t.avgvolume) as volumechange FROM " +
       "(SELECT symbol,timestampValue,price,volume,AVG(price) OVER w AS avgprice,AVG(volume) OVER w AS avgvolume FROM hedge.deltadata " +
       "WINDOW w AS (PARTITION BY symbol ORDER BY timestampValue ROWS BETWEEN " + actualWindow + " PRECEDING AND CURRENT ROW)) t) t1"

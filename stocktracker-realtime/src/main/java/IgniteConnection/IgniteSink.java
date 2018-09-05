@@ -16,10 +16,11 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 public class IgniteSink extends RichSinkFunction<StockMarket> {
 
 	  int batchCount = 0;
+	  
 	  //String SqlQuery;
-	  String SqlQuery ="INSERT INTO stock VALUES (?, ? ,?,?,?,?,?,?,?)";
+	  String SqlQuery ="INSERT INTO stock VALUES (?, ? ,?,?,?,?,?,?,?,?)";
 	  Timestamp lastBatchTime = new Timestamp(System.currentTimeMillis());
-
+	  Timestamp tmst;
 	  private PreparedStatement statement;
 		Calendar cal =  Calendar.getInstance();
 		
@@ -32,7 +33,7 @@ public class IgniteSink extends RichSinkFunction<StockMarket> {
 	  public void invoke(StockMarket aCase) throws Exception {
  //case class StockMarket(stock_symbol:String,transactionTime:String,price:Double,volume:Double,priceAvg
 		  // :Double,priceChange :Double,volumeAvg:Double,volumeChange:Double,ratio:Double)
-
+		  tmst = new Timestamp(System.currentTimeMillis());
 	    statement.setString(1, aCase.stock_symbol());
 		  statement.setString(2, aCase.transactionTime());
 		  statement.setDouble(3,aCase.price());
@@ -42,6 +43,7 @@ public class IgniteSink extends RichSinkFunction<StockMarket> {
 		  statement.setDouble(7,aCase.volumeAvg());
 		  statement.setDouble(8,aCase.volumeChange());
 		  statement.setDouble(9,aCase.ratio());
+		  statement.setTimestamp(10, tmst);
 
 	    statement.addBatch();
 	    batchCount++;

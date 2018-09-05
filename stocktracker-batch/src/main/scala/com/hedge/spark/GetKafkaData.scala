@@ -29,9 +29,13 @@ object GetKafkaData {
   def main(args: Array[String]): Unit = {
     val topicName = args
 
-    val warehouseLocation = "hedge-spark-warehouse";
+    val warehouseLocation = "hdfs://localhost:9000/hedge-spark-warehouse";
     val spark = SparkSession.builder().appName("Get Kafka Data").master("local[2]")
-				.config("spark.sql.warehouse.dir", warehouseLocation).enableHiveSupport().getOrCreate();
+				.config("spark.sql.warehouse.dir", warehouseLocation)
+				.config("spark.hadoop.fs.defaultFS","hdfs://localhost:9000")
+				.config("fs.defaultFS","hdfs://localhost:9000")
+				.enableHiveSupport().getOrCreate();
+
     
     val sc = spark.sparkContext
   //  val sparkConf = new SparkConf().setAppName("GetKafkaData")
@@ -39,7 +43,7 @@ object GetKafkaData {
     val ssc = new StreamingContext(sc, Seconds(60))
     
     val kafkaParams = Map(
-      "bootstrap.servers" -> "sandbox.kylo.io:6667",
+      "bootstrap.servers" -> "sandbox.kylo.io:9092",
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id" -> "mygroup1",
@@ -53,7 +57,8 @@ object GetKafkaData {
     import spark.implicits._
     lines.foreachRDD{(rdd,time) => 
         if(rdd.count() > 0){
-          val dfStock = rdd.map(line => parseJson(line)).toDF()
+          val dfStock = rdd.map(
+              line => parseJson(line)).toDF()
    //       dfStock.show()
           dfStock.createOrReplaceTempView("stock")
           spark.sql("set hive.exec.dynamic.partition=true")
@@ -61,11 +66,13 @@ object GetKafkaData {
           
           val startTime = Calendar.getInstance
           logger.info("Hive Insertion Starts at time =========> " +startTime.get(Calendar.HOUR)+":"+startTime.get(Calendar.MINUTE)+":"+startTime.get(Calendar.SECOND))
-          spark.sql("insert into table hedge.stock_tracker partition(symbol) select timestampValue,price,volume,symbol from stock")
-       //   spark.sql("insert into table hedge.stock_tracker select symbol,timestampValue,price,volume from stock")
+          //spark.sql("insert into table hedge.stock_tracker partition(symbol) select timestampValue,price,volume,symbol from stock")
+          spark.sql("insert into table hedge.stock_tracker select symbol,timestampValue,price,volume from stock")
        
           val endTime = Calendar.getInstance
           logger.info("Hive Insertion Ends at time   =========> " +endTime.get(Calendar.HOUR)+":"+endTime.get(Calendar.MINUTE)+":"+endTime.get(Calendar.SECOND))
+          val dataCnt = spark.sql("select count(*) from stock");
+          logger.info("Total records inserted are : " + dataCnt.show());
         }
     }
     
